@@ -72,9 +72,16 @@ const deleteProduct = asyncHandler(
 
 const getAllProducts = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { page, offset } = req.query;
+    const { page, offset, isFeatured, maxPrice, rating } = req.query;
+    
+    let toBeFinded = {}
 
-    const products = await Product.find()
+    if (isFeatured) toBeFinded = { ...toBeFinded, isFeatured : Boolean(isFeatured) };
+    if (maxPrice) toBeFinded = { ...toBeFinded, price : { $lte : Number(maxPrice)} };
+    if (rating) toBeFinded = { ...toBeFinded, rating : { $gte : Number(rating)} };
+
+    const products = await Product.find(toBeFinded)
+      .sort({ rating: -1, updatedAt: -1, createdAt: -1 })
       .skip((Number(page) - 1) * Number(offset))
       .limit(Number(offset));
 
@@ -91,6 +98,7 @@ const getFeaturedProducts = asyncHandler(
     const { page, offset } = req.query;
 
     const products = await Product.find({ isFeatured: true })
+      .sort({ rating: -1, updatedAt: -1, createdAt: -1 })
       .skip((Number(page) - 1) * Number(offset))
       .limit(Number(offset));
 
@@ -104,10 +112,10 @@ const getFeaturedProducts = asyncHandler(
 
 const getProductsByPrice = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { page, offset } = req.query;
-    const { maxPrice } = req.body;
+    const { page, offset, maxPrice } = req.query;
 
-    const products = await Product.find({ price: { $lt: maxPrice } })
+    const products = await Product.find({ price: { $lte: maxPrice } })
+      .sort({ rating: -1, updatedAt: -1, createdAt: -1 })
       .skip((Number(page) - 1) * Number(offset))
       .limit(Number(offset));
 
@@ -121,10 +129,10 @@ const getProductsByPrice = asyncHandler(
 
 const getProductsByRating = asyncHandler(
   async (req: CustomRequest, res: Response) => {
-    const { page, offset } = req.query;
-    const { rating } = req.body;
+    const { page, offset, rating } = req.query;
 
-    const products = await Product.find({ rating: { $gt: rating } })
+    const products = await Product.find({ rating: { $gte: rating } })
+      .sort({ rating: -1, updatedAt: -1, createdAt: -1 })
       .skip((Number(page) - 1) * Number(offset))
       .limit(Number(offset));
 

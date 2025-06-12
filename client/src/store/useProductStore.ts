@@ -26,7 +26,10 @@ interface ProductState {
     productId: string
   ) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
-  getAllProducts: (page: string) => Promise<void>;
+  getAllProducts: (
+    page: string,
+    data?: { isFeatured?: string; maxPrice?: number; rating?: number }
+  ) => Promise<void>;
   getFeaturedProducts: (page: string) => Promise<void>;
   getProductsByPrice: (page: string, maxPrice: number) => Promise<void>;
   getProductsByRating: (page: string, rating: number) => Promise<void>;
@@ -96,10 +99,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
-  getAllProducts: async (page) => {
+  getAllProducts: async (page, data) => {
     set({ error: null });
     try {
-      const response = await apiGetAllProducts(page);
+      const response = await apiGetAllProducts(page, data);
       if (response.data.success) {
         set({ products: response.data.data });
       } else {

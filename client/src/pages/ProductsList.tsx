@@ -19,7 +19,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Loader2Icon, StarIcon, TrashIcon } from "lucide-react";
+import { Loader2Icon, StarIcon, Trash2Icon, TrashIcon } from "lucide-react";
 import type { IProduct } from "@/types";
 import { useAuthStore } from "@/store/useAuthStore";
 import { toast } from "sonner";
@@ -56,31 +56,28 @@ function ProductsList() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      clearError();
-      await getAllProducts(page);
-      setLoading(false);
-    };
-    fetch();
-  }, [getAllProducts, page]);
-
-  const filtered = products.filter((p: IProduct) => {
-    if (isFeaturedFilter) {
-      const want = isFeaturedFilter === "true";
-      if (p.isFeatured !== want) return false;
+  const getProducts = async (
+    page: string,
+    featured: string,
+    price: string,
+    rating: string
+  ) => {
+    setLoading(true);
+    clearError();
+    const isFeatured = featured==="All" ? undefined : featured;
+    const maxPrice = price ? Number(price) : undefined;
+    const ratingParam = rating ? Number(rating) : undefined;
+    try {
+      await getAllProducts(page, {
+        isFeatured,
+        maxPrice,
+        rating: ratingParam,
+      });
+    } catch (e) {
+      toast.error("Failed to fetch products");
     }
-    if (maxPrice) {
-      const mp = Number(maxPrice);
-      if (p.price > mp) return false;
-    }
-    if (minRating) {
-      const mr = Number(minRating);
-      if (p.rating < mr) return false;
-    }
-    return true;
-  });
+    setLoading(false);
+  };
 
   const handleUpdateProduct = (productId: string) => {
     const product = products.find((p: IProduct) => p._id === productId);
@@ -100,6 +97,29 @@ function ProductsList() {
       toast.error("Failed to delete product");
     }
   };
+
+  const handleApplyFilters = () => {
+    setPage("1");
+    setIsFeaturedFilter(isFeaturedFilter);
+    setMaxPrice(maxPrice);
+    setMinRating(minRating);
+    getProducts(page, isFeaturedFilter, maxPrice, minRating);
+  };
+
+  const handleClearFilters = () => {
+    setIsFeaturedFilter("All");
+    setMaxPrice("");
+    setMinRating("");
+    setPage("1");
+    setIsFeaturedFilter("All");
+    setMaxPrice("");
+    setMinRating("");
+    getProducts(page, "All", "", "");
+  };
+
+  useEffect(() => {
+    getProducts(page, isFeaturedFilter, maxPrice, minRating);
+  }, [getAllProducts, page]);
 
   return (
     <div className="p-4">
@@ -133,7 +153,6 @@ function ProductsList() {
             <Label htmlFor="max-price">Max Price</Label>
             <Input
               id="max-price"
-              type="number"
               placeholder="e.g. 100"
               value={maxPrice}
               onChange={(e) => setMaxPrice(e.target.value)}
@@ -143,24 +162,18 @@ function ProductsList() {
             <Label htmlFor="min-rating">Min Rating</Label>
             <Input
               id="min-rating"
-              type="number"
               step="0.1"
-              placeholder="e.g. 4"
+              placeholder="e.g. 4.5"
               value={minRating}
               onChange={(e) => setMinRating(e.target.value)}
             />
           </div>
-          <div className="flex items-end">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsFeaturedFilter("");
-                setMaxPrice("");
-                setMinRating("");
-              }}
-            >
-              Clear Filters
+          <div className="flex items-end space-x-2">
+            <Button variant="outline" onClick={handleClearFilters}>
+              <Trash2Icon className="mr-2 h-4 w-4" />
+              Clear
             </Button>
+            <Button onClick={handleApplyFilters}>Apply</Button>
           </div>
         </div>
 
@@ -170,11 +183,11 @@ function ProductsList() {
           </div>
         ) : error ? (
           <div className="text-center text-red-600 py-10">{error}</div>
-        ) : filtered.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="text-center py-10">No products found.</div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((p) => (
+            {products.map((p) => (
               <Card key={p._id} className="shadow">
                 <CardHeader>
                   <div className="flex justify-between items-center">
@@ -252,6 +265,7 @@ function ProductsList() {
           <Button
             variant="outline"
             onClick={() => setPage((prev) => String(Number(prev) + 1))}
+            disabled={products.length === 0}
           >
             Next
           </Button>

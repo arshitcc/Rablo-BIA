@@ -16,23 +16,44 @@ const deleteProduct = (productId: string) => {
   return apiClient.delete(`/products/${productId}`);
 };
 
-const getAllProducts = (page: string) => {
-  return apiClient.get(`/products?page=${page}&offset=10`);
+const getAllProducts = (
+  page: string,
+  data?: { isFeatured?: string; maxPrice?: number; rating?: number }
+) => {
+  const url = new URLSearchParams();
+
+  url.append("page", page);
+  url.append("offset", "12");
+
+  if (data?.isFeatured) {
+    url.append("isFeatured", data.isFeatured.toString());
+  }
+
+ 
+  if (typeof data?.maxPrice === "number") {
+    url.append("maxPrice", data.maxPrice.toString());
+  }
+
+  if (data?.rating) {
+    url.append("rating", data.rating.toString());
+  }
+
+  return apiClient.get(`/products?${url.toString()}`);
 };
 
 const getFeaturedProducts = (page: string) => {
-  return apiClient.get(`/products/featured?page=${page}&offset=10`);
+  return apiClient.get(`/products/featured?page=${page}&offset=12`);
 };
 
 const getProductsByPrice = (page: string, maxPrice: number) => {
   return apiClient.get(
-    `/products/price?page=${page}&offset=10&maxPrice=${maxPrice}`
+    `/products/price?page=${page}&offset=12&maxPrice=${maxPrice}`
   );
 };
 
 const getProductsByRating = (page: string, rating: number) => {
   return apiClient.get(
-    `/products/rating?page=${page}&offset=10&rating=${rating}`
+    `/products/rating?page=${page}&offset=12&rating=${rating}`
   );
 };
 
