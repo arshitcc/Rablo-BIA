@@ -8,11 +8,12 @@ import { ApiError } from "../utils/api-error";
 
 const authenticateUser = asyncHandler(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
+
     const token =
       req.cookies?.accessToken ||
       req.headers.authorization?.replace("Bearer ", "");
 
-    if (!token.trim()) {
+    if (!token?.trim()) {
       return res
         .status(400)
         .json(new ApiResponse(401, false, "Unauthorized Token"));

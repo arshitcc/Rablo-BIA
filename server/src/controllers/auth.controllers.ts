@@ -81,10 +81,10 @@ const userRegister = asyncHandler(async (req: Request, res: Response) => {
 });
 
 const userLogin = asyncHandler(async (req: Request, res: Response) => {
-  const { username, email, password } = req.body;
+  const { user,  password } = req.body;
 
   const existedUser = await User.findOne<IUser>({
-    $or: [{ username }, { email }],
+    $or: [{ username : user }, { email : user }],
   });
 
   if (!existedUser) {
@@ -111,7 +111,7 @@ const userLogin = asyncHandler(async (req: Request, res: Response) => {
     existedUser,
   );
 
-  const user = await User.findOne({ _id: existedUser._id }).select(
+  const currUser = await User.findOne({ _id: existedUser._id }).select(
     "-password -refreshToken -emailVerificationToken -emailVerificationExpiry -forgotPasswordToken -forgotPasswordExpiry",
   );
 
@@ -125,7 +125,7 @@ const userLogin = asyncHandler(async (req: Request, res: Response) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, true, "User Authenticated Successfully", user));
+    .json(new ApiResponse(200, true, "User Authenticated Successfully", currUser));
 });
 
 const userLogout = asyncHandler(async (req: CustomRequest, res: Response) => {

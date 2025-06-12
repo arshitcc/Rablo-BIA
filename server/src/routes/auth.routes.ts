@@ -30,11 +30,11 @@ const router = Router();
 
 router.route("/").get(authenticateUser, getCurrentUser);
 router.route("/signup").post(userRegisterValidation(), validate, userRegister);
-router.route("/login").post(userLogin);
+router.route("/login").post(userLoginValidation(), validate, userLogin);
 
 router
   .route("/logout")
-  .post(authenticateUser, userLoginValidation(), validate, userLogout);
+  .post(authenticateUser, userLogout);
 
 router
   .route("/refresh-tokens")

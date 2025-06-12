@@ -1,5 +1,4 @@
 import { body, ValidationChain } from "express-validator";
-import { ApiError } from "../utils/api-error";
 import { AvailableUserRoles } from "../constants/constants";
 
 const userRegisterValidation = () => [
@@ -43,20 +42,11 @@ const userRegisterValidation = () => [
 
 const userLoginValidation = () =>
   [
-    body("username")
+    body("user")
       .optional()
       .trim()
       .notEmpty()
       .withMessage("Username is required"),
-
-    body("email")
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required")
-      .isEmail()
-      .withMessage("Please enter a valid email")
-      .normalizeEmail(),
 
     body("password")
       .trim()
@@ -65,16 +55,6 @@ const userLoginValidation = () =>
       .isLength({ min: 8, max: 50 })
       .withMessage("Password must be minimum 8 characters"),
 
-    body()
-      .custom((_, { req }) => {
-        const { username, email } = req.body;
-        if (!username && !email) {
-          throw new ApiError(400, "Username or Email is required");
-        }
-        return true;
-      })
-      .withMessage("Either username or email is required"),
-    ,
   ] as ValidationChain[];
 
 const userChangeCurrentPasswordValidator = () => {
